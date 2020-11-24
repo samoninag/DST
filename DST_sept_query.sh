@@ -1,24 +1,24 @@
 #!/bin/bash
 
 #################################################################################################################################################################
-# CREATED BY SAMONI NAG ON 10/6/2020
+# CREATED BY SAMONI NAG ON 10/26/2020
 # 
 # THIS SCRIPT QUERIES DATA FROM DAYBAG (OR SANDBOX) 70 DIFFERENT TIMES (FOR 5 U.S. TIMEZONES & 7 YEARS & 2 RELATIVE POSITIONS) WITH THE FOLLOWING CRITERIA:
 #   [1] AIRPORT = 2 (HONOLULU)
 #   [2] DAY = 1 (LEVEL 1)
 #   [3] REPLAY = 0 (NO REPLAY)
 #   [4] MODE = 0 (CAREER)
-#   [5] DATE FALLS WITHIN CERTAIN TIME RANGES AROUND A DST PHASE ADVANCE (SPRING FORWARD) FROM 2013 - 2019 
+#   [5] DATE FALLS WITHIN CERTAIN TIME RANGES AROUND A CONTROL "PHASE CHANGE" FROM 2013 - 2019 
 #    
 # RELEVANT TIME ZONES INCLUDE: 
-#   - EASTERN, CENTRAL, MOUNTAIN, PACIFIC, ALASKA
+#   - EASTERN, CENTRAL, MOUNTAIN, PACIFIC, ALASKA 
 #       - STANDARD: -5, -6, -7, -8, -9 
 #       - DAYLIGHT: -4, -5, -6, -7, -8 
 #   - NOT INCLUDING HAWAII (-10) BECUASE DST IS NOT OBSERVED 
 # 
 #################################################################################################################################################################
 
-season="SPRING";
+season="SEPTEMBER";
 
 # AIRPORT SCANNER CRITERIA
 airport=2;  
@@ -33,34 +33,34 @@ nTimeZones=${#timeZoneLabels[@]}; # 5
 # SET OTHER VARIABLES TO BE USED IN QUERY LOOPS    
 years=(2013 2014 2015 2016 2017 2018 2019);
 nYears=${#years[@]}; # 7
-positions=("PRE" "POST");
-nPositions=${#positions[@]}; # 2
+positions=("PRE" "POST"); 
+nPositions=${#positions[@]}; # 2 
         
 # LIST OF RELEVANT TIME STAMPS (BOUNDS OF 14-DAY WINDOW AROUND TIME CHANGE) IN DATETIME AND UTC (EASTERN TIME ZONE ONLY):  
-    # Sunday March 3, 2013 @ 6:00:00AM EST through Saturday March 16, 2013 @ 11:59:59PM EST | 1362308400 - 1363492799  
-    # Sunday March 2, 2014 @ 6:00:00AM EST through Saturday March 15, 2014 @ 11:59:59PM EST | 1393758000 - 1394942399  
-    # Sunday March 1, 2015 @ 6:00:00AM EST through Saturday March 14, 2015 @ 11:59:59PM EST | 1425207600 - 1426391999  
-    # Sunday March 6, 2016 @ 6:00:00AM EST through Saturday March 19, 2016 @ 11:59:59PM EST | 1457262000 - 1458446399  
-    # Sunday March 5, 2017 @ 6:00:00AM EST through Saturday March 18, 2017 @ 11:59:59PM EST | 1488711600 - 1489895999  
-    # Sunday March 4, 2018 @ 6:00:00AM EST through Saturday March 17, 2018 @ 11:59:59PM EST | 1520161200 - 1521345599  
-    # Sunday March 3, 2019 @ 6:00:00AM EST through Saturday March 16, 2019 @ 11:59:59PM EST | 1551610800 - 1552795199    
-
+    # Sunday September 8, 2013 @ 6:00:00AM EST through Saturday September 21, 2013 @ 11:59:59PM EST | 1378634400 - 1379822399  
+    # Sunday September 14, 2014 @ 6:00:00AM EST through Saturday September 27, 2014 @ 11:59:59PM EST | 1410688800 - 1411876799  
+    # Sunday September 13, 2015 @ 6:00:00AM EST through Saturday September 26, 2015 @ 11:59:59PM EST | 1442138400 - 1443326399  
+    # Sunday September 11, 2016 @ 6:00:00AM EST through Saturday September 24, 2016 @ 11:59:59PM EST | 1473588000 - 1474775999  
+    # Sunday September 10, 2017 @ 6:00:00AM EST through Saturday September 23, 2017 @ 11:59:59PM EST | 1505037600 - 1506225599  
+    # Sunday September 9, 2018 @ 6:00:00AM EST through Saturday September 22, 2018 @ 11:59:59PM EST | 1536487200 - 1537675199  
+    # Sunday September 8, 2019 @ 6:00:00AM EST through Saturday September 21, 2019 @ 11:59:59PM EST | 1567936800 - 1569124799    
+ 
 # LIST OF INTERVENEING TIME STAMPS TO EXCLUDE FROM QUERY (11:59:59PM prior to time change to 6:00:00AM after time change) IN DATETIME AND UTC (EASTERN TIME ZONE ONLY):
-    # Saturday March 9, 2013 @ 11:59:59PM EST through Sunday March 10, 2013 @ 6:00:00AM EST | 1362891599 - 1362909600
-    # Saturday March 8, 2014 @ 11:59:59PM EST through Sunday March 9, 2014 @ 6:00:00AM EST | 1394341199 - 1394359200
-    # Saturday March 7, 2015 @ 11:59:59PM EST through Sunday March 8, 2015 @ 6:00:00AM EST | 1425790799 - 1425808800
-    # Saturday March 12, 2016 @ 11:59:59PM EST through Sunday March 13, 2016 @ 6:00:00AM EST | 1457845199 - 1457863200
-    # Saturday March 11, 2017 @ 11:59:59PM EST through Sunday March 12, 2017 @ 6:00:00AM EST | 1489294799 - 1489312800
-    # Saturday March 10, 2018 @ 11:59:59PM EST through Sunday March 11, 2018 @ 6:00:00AM EST | 1520744399 - 1520762400
-    # Saturday March 9, 2019 @ 11:59:59PM EST through Sunday March 10, 2019 @ 6:00:00AM EST | 1552193999 - 1552212000
+    # Saturday September 14, 2013 @ 11:59:59PM EST through Sunday September 15, 2013 @ 6:00:00AM EST | 1379217599 - 1379239200 
+    # Saturday September 20, 2014 @ 11:59:59PM EST through Sunday September 21, 2014 @ 6:00:00AM EST | 1411271999 - 1411293600
+    # Saturday September 19, 2015 @ 11:59:59PM EST through Sunday September 20, 2015 @ 6:00:00AM EST | 1442721599 - 1442743200
+    # Saturday September 17, 2016 @ 11:59:59PM EST through Sunday September 18, 2016 @ 6:00:00AM EST | 1474171199 - 1474192800 
+    # Saturday September 16, 2017 @ 11:59:59PM EST through Sunday September 17, 2017 @ 6:00:00AM EST | 1505620799 - 1505642400
+    # Saturday September 15, 2018 @ 11:59:59PM EST through Sunday September 16, 2018 @ 6:00:00AM EST | 1537070399 - 1537092000
+    # Saturday September 14, 2019 @ 11:59:59PM EST through Sunday September 15, 2019 @ 6:00:00AM EST | 1568519999 - 1568541600
 
 # EASTERN TIME ZONE UTC VALUES (HARD CODED WITH AID FROM http://www.vk2zay.net/calculators/epochTimeConverter.php) (OR https://www.epochconverter.com/)
 # 2013start, 2013end, 2014start, 2014end, 2015start, 2015end, .... 2019start, 2019end 
-easternBounds=(1362308400 1363492799 1393758000 1394942399 1425207600 1426391999 1457262000 1458446399 1488711600 1489895999 1520161200 1521345599 1551610800 1552795199); 
+easternBounds=(1378634400 1379822399 1410688800 1411876799 1442138400 1443326399 1473588000 1474775999 1505037600 1506225599 1536487200 1537675199 1567936800 1569124799); 
 # 2013dayBeforeChange, 2013dayAfterChange, 2014dayBeforeChange, 2014dayAfterChange, 2015dayBeforeChange, 2015dayAfterChange, .... 2019dayBeforeChange, 2019dayAfterChange 
-easternChange=(1362891599 1362909600 1394341199 1394359200 1425790799 1425808800 1457845199 1457863200 1489294799 1489312800 1520744399 1520762400 1552193999 1552212000); 
+easternChange=(1379217599 1379239200 1411271999 1411293600 1442721599 1442743200 1474171199 1474192800 1505620799 1505642400 1537070399 1537092000 1568519999 1568541600); 
 
-constant=3600; # number of seconds in 1 hour
+constant=3600; # number of seconds in 1 hour 
 multiplier=0; 
 
 # CENTRAL TIME ZONE 
@@ -143,15 +143,16 @@ do
             position=${positions[$k-1]};
             case $position in
                 "PRE")
-                tz=$timeZone_standard; 
+                tz=$timeZone_dst; 
                 ;;
                 "POST")
+                # tz=$timeZone_standard;
                 tz=$timeZone_dst;
                 ;;
             esac  
  
             let counter+=1; 
-            # GET LOWER BOUND FOR POSSIBLE DATES 
+            # GET LOWER BOUND FOR POSSIBLE DATES  
             date_lower=${allBounds[counter]};   
             # GET UPPER BOUND FOR POSSIBLE DATES  
             date_upper=${allChanges[counter]};    
